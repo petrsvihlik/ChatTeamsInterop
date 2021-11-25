@@ -35,7 +35,7 @@ namespace ChatTeamsInterop
             _communicationIdentityToken = await GetCommunicationIdentityToken(_configuration.Endpoint, _configuration.AccessKey);
             CallAgent callAgent = await CreateCallAgent(name, _communicationIdentityToken);
             _call = await callAgent.JoinAsync(new TeamsMeetingLinkLocator(_configuration.TeamsMeetingLink), new JoinCallOptions());
-            _call.OnStateChanged += Call__OnStateChanged;
+            _call.OnStateChanged += Call_OnStateChanged;
 
             // Wait for events
             Thread.Sleep(Timeout.Infinite);
@@ -43,9 +43,9 @@ namespace ChatTeamsInterop
 
         private static async Task<CallAgent> CreateCallAgent(string name, string communicationIdentityToken)
         {
-            var token_credential = new Azure.WinRT.Communication.CommunicationTokenCredential(communicationIdentityToken);
-            var call_agent = await new CallClient().CreateCallAgent(token_credential, new CallAgentOptions() { DisplayName = name });
-            return call_agent;
+            var tokenCredential = new Azure.WinRT.Communication.CommunicationTokenCredential(communicationIdentityToken);
+            var callAgent = await new CallClient().CreateCallAgent(tokenCredential, new CallAgentOptions() { DisplayName = name });
+            return callAgent;
         }
 
         private static ChatClient CreateChatClient(Uri endpoint, string communicationIdentityToken)
@@ -60,12 +60,10 @@ namespace ChatTeamsInterop
             Response<CommunicationUserIdentifier> user = await communicationIdentityClient.CreateUserAsync();
             IEnumerable<CommunicationTokenScope> scopes = new[] { CommunicationTokenScope.Chat, CommunicationTokenScope.VoIP };
             Response<AccessToken> tokenResponseUser = await communicationIdentityClient.GetTokenAsync(user.Value, scopes);
-
-            var user_token_ = tokenResponseUser.Value.Token;
-            return user_token_;
+            return tokenResponseUser.Value.Token;
         }
 
-        private async static void Call__OnStateChanged(object sender, PropertyChangedEventArgs args)
+        private async static void Call_OnStateChanged(object sender, PropertyChangedEventArgs args)
         {
             Console.WriteLine(_call.State.ToString());
 
@@ -73,9 +71,18 @@ namespace ChatTeamsInterop
             {
                 case CallState.Connected:
                     Console.WriteLine("Connected!");
-                    var _chatClient = CreateChatClient(_configuration.Endpoint, _communicationIdentityToken);
-                    var thread_Id_ = WebUtility.UrlDecode(Regex.Match(_configuration.TeamsMeetingLink, "(.*meetup-join\\/)(?<threadId>19.*)(\\/.*)").Groups["threadId"].Value);
-                    ChatThreadClient chatThreadClient = _chatClient.GetChatThreadClient(thread_Id_);
+                    var chatClient = CreateChatClient(_configuration.Endpoint, _communicationIdentityToken);
+
+                    // Get threadId using chatClient
+                    //AsyncPageable<ChatThreadItem> chatThreadItems = chatClient.GetChatThreadsAsync();
+                    //var enumerator = chatThreadItems.GetAsyncEnumerator();
+                    //while (await enumerator.MoveNextAsync())
+                    //{
+                    //    var chatThreadItem = enumerator.Current;
+                    //}
+
+                    var threadId = WebUtility.UrlDecode(Regex.Match(_configuration.TeamsMeetingLink, "(.*meetup-join\\/)(?<threadId>19.*)(\\/.*)").Groups["threadId"].Value);
+                    ChatThreadClient chatThreadClient = chatClient.GetChatThreadClient(threadId);
 
                     while (true)
                     {
