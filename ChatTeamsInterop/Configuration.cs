@@ -11,5 +11,7 @@ namespace ChatTeamsInterop
         public string TeamsMeetingLink { get; set; }
 
         public string Username { get; set; }
+
+        public string ServerCallId { get; set; }
     }
 }
