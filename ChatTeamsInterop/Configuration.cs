@@ -9,5 +9,7 @@ namespace ChatTeamsInterop
         public string AccessKey { get; set; }
 
         public string TeamsMeetingLink { get; set; }
+
+        public string Username { get; set; }
     }
 }

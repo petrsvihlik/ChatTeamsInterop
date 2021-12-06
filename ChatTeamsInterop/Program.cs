@@ -28,12 +28,15 @@ namespace ChatTeamsInterop
         {
             _configuration = new Configuration();
 
-            Console.Write("Enter your name: ");
-            var name = Console.ReadLine();
+            if (string.IsNullOrEmpty(_configuration.Username))
+            {
+                Console.Write("Enter your name: ");
+                _configuration.Username = Console.ReadLine();
+            }
 
             Console.WriteLine("Connecting...");
             _communicationIdentityToken = await GetCommunicationIdentityToken(_configuration.Endpoint, _configuration.AccessKey);
-            CallAgent callAgent = await CreateCallAgent(name, _communicationIdentityToken);
+            CallAgent callAgent = await CreateCallAgent(_configuration.Username, _communicationIdentityToken);
             _call = await callAgent.JoinAsync(new TeamsMeetingLinkLocator(_configuration.TeamsMeetingLink), new JoinCallOptions());
             _call.OnStateChanged += Call_OnStateChanged;
 
